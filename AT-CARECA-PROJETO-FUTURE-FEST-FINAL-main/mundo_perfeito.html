@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visão do Futuro • Enerius</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      background: #6a0dad;
+      background-image: 
+        repeating-linear-gradient(0deg, rgba(138,43,226,0.2), rgba(138,43,226,0.2) 1px, transparent 1px, transparent 20px),
+        repeating-linear-gradient(90deg, rgba(138,43,226,0.2), rgba(138,43,226,0.2) 1px, transparent 1px, transparent 20px),
+        repeating-linear-gradient(45deg, rgba(138,43,226,0.15) 0px, rgba(138,43,226,0.15) 10px, transparent 10px, transparent 28px);
+      background-size: 50px 50px;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    .btn-voltar {
+      position: absolute;
+      top: 30px;
+      left: 30px;
+      background: rgba(255,255,255,0.25);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: none;
+      padding: 12px 32px;
+      border-radius: 50px;
+      font-weight: bold;
+      font-size: 1.1rem;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      transition: all 0.3s;
+    }
+    .btn-voltar:hover { background: rgba(255,255,255,0.4); }
+
+    .card { text-align: center; max-width: 540px; width: 100%; }
+
+    .balao {
+      background: rgba(0,0,0,0.5);
+      padding: 18px 36px;
+      border-radius: 50px;
+      font-size: 1.55rem;
+      margin-bottom: 40px;
+      display: inline-block;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      backdrop-filter: blur(8px);
+    }
+
+    .input-box {
+      position: relative;
+      margin-bottom: 50px;
+    }
+
+    textarea#visao {
+      width: 100%;
+      height: 150px;
+      padding: 22px 70px 22px 28px;
+      font-size: 1.3rem;
+      background: rgba(0,0,0,0.5);
+      border: none;
+      border-radius: 32px;
+      color: white;
+      resize: none;
+      box-shadow: 0 12px 35px rgba(0,0,0,0.6);
+    }
+    textarea#visao::placeholder { color: rgba(255,255,255,0.7); }
+    textarea#visao:focus { outline: none; box-shadow: 0 0 0 5px rgba(138,43,226,0.5); }
+
+    .mic {
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 56px;
+      height: 56px;
+      background: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+    }
+    .mic::after {
+      content: "mic";
+      font-size: 32px;
+      color: #333;
+    }
+
+    .btn-gerar {
+      background: rgba(200,162,255,0.92);
+      color: #333;
+      font-weight: bold;
+      font-size: 1.5rem;
+      padding: 18px 80px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+      transition: all 0.3s;
+    }
+    .btn-gerar:hover { background: #e0bbff; transform: translateY(-5px); }
+
+    .phone {
+      position: absolute;
+      right: 30px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 100px;
+      height: 200px;
+      background: linear-gradient(135deg, #1a0027, #000);
+      border-radius: 28px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+    }
+    .phone::before { /* tela */ content: ''; position: absolute; top: 30px; left: 50%; transform: translateX(-50%); width: 50px; height: 50px; background: #000; border-radius: 12px; }
+    .phone::after  { /* botão home */ content: ''; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 38px; height: 38px; background: #333; border-radius: 50%; }
+  </style>
+</head>
+<body>
+
+  <button class="btn-voltar" onclick="history.back()">Voltar</button>
+
+  <div class="card">
+    <div class="balao" id="saudacao">Olá, tudo bem?</div>
+
+    <div class="input-box">
+      <textarea id="visao" placeholder="Descreva sua visão do futuro" required></textarea>
+      <div class="mic" id="micBtn"></div>
+    </div>
+
+    <button class="btn-gerar" id="btnGerar">Gerar imagem</button>
+  </div>
+
+  <div class="phone"></div>
+
+  <!-- Áudio invisível que fala o nome -->
+  <audio id="audioSaudacao" preload="auto"></audio>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const urlParams = new URLSearchParams(window.location.search);
+      const nome = urlParams.get('audios/audio_pergunta_nome.mp3')?.trim() || 'amigo';
+
+      // Atualiza o texto do balão
+      document.getElementById('saudacao').textContent = `Olá, ${nome} tudo bem?`;
+
+      // === ÁUDIO PERSONALIZADO ===
+      const audio = document.getElementById('audioSaudacao');
+      audio.src = `http://127.0.0.1:5000/audio_personalizado/${encodeURIComponent(nome)}`;
+
+      // Tenta tocar assim que estiver pronto
+      audio.addEventListener('canplaythrough', () => {
+        audio.play().catch(() => console.log('Reprodução automática bloqueada'));
+      });
+
+      // Força tocar após 2 segundos (caso o canplaythrough demore)
+      setTimeout(() => audio.play().catch(() => {}), 2000);
+
+      // === ENVIO DA VISÃO ===
+      document.getElementById('btnGerar').addEventListener('click', async () => {
+        const visao = document.getElementById('visao').value.trim();
+        if (!visao) {
+          alert('Por favor, descreva sua visão do futuro!');
+          return;
+        }
+
+        document.getElementById('btnGerar').textContent = 'Gerando...';
+        document.getElementById('btnGerar').disabled = true;
+
+        try {
+          const res = await fetch('http://127.0.0.1:5000/gerar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nome, mundo_perfeito: visao })
+          });
+
+          const data = await res.json();
+
+          if (res.ok) {
+            window.location.href = `/resultado.html?nome=${encodeURIComponent(data.nome)}&mundo_perfeito=${encodeURIComponent(data.mundo_perfeito)}&imagem_url=${encodeURIComponent(data.imagem_url)}`;
+          } else {
+            alert('Erro: ' + (data.erro || 'Tente novamente'));
+          }
+        } catch (err) {
+          alert('Erro de conexão. Verifique se o Flask está rodando!');
+        } finally {
+          document.getElementById('btnGerar').textContent = 'Gerar imagem';
+          document.getElementById('btnGerar').disabled = false;
+        }
+      });
+    });
+  </script>
+</body>
+</html>
